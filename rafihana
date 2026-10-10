@@ -1,0 +1,1380 @@
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  ShoppingBag, Search, Heart, User, Menu, X, Star, ArrowRight, 
+  TrendingUp, ShieldCheck, Truck, RefreshCw, Zap, Clock, ChevronRight, 
+  Plus, Edit, Trash2, Eye, LayoutDashboard, Package, ShoppingCart, 
+  Users, BarChart3, Settings, AlertCircle, CheckCircle2, Filter, 
+  SlidersHorizontal, Check, ArrowUpRight, DollarSign, Activity, Percent
+} from 'lucide-react';
+
+const INITIAL_CATEGORIES = [
+  { id: 'all', name: 'All Products' },
+  { id: 'audio', name: 'Audio & Sound' },
+  { id: 'wearables', name: 'Wearables' },
+  { id: 'accessories', name: 'Tech Accessories' },
+  { id: 'lifestyle', name: 'Smart Home' }
+];
+
+const INITIAL_PRODUCTS = [
+  {
+    id: 1,
+    name: 'Aura Sound Pro Wireless Headphones',
+    category: 'audio',
+    price: 249.99,
+    originalPrice: 329.99,
+    rating: 4.9,
+    reviewsCount: 128,
+    stock: 45,
+    badge: 'Best Seller',
+    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80',
+    description: 'Ultra-low latency lossless audio with active noise cancellation, custom spatial audio drivers, and 40-hour battery life.',
+    isFeatured: true,
+    colors: ['#1E293B', '#F8FAFC', '#94A3B8']
+  },
+  {
+    id: 2,
+    name: 'Pulse X Pro Smartwatch Titanium',
+    category: 'wearables',
+    price: 389.00,
+    originalPrice: 449.00,
+    rating: 4.8,
+    reviewsCount: 94,
+    stock: 18,
+    badge: 'New',
+    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80',
+    description: 'Precision aerospace titanium casing with continuous bio-metric sensors, sapphire glass display, and 100m water resistance.',
+    isFeatured: true,
+    colors: ['#0F172A', '#D97706', '#E2E8F0']
+  },
+  {
+    id: 3,
+    name: 'Minimalist MagCharge Power Stand',
+    category: 'accessories',
+    price: 69.99,
+    originalPrice: 89.99,
+    rating: 4.7,
+    reviewsCount: 210,
+    stock: 82,
+    badge: '20% OFF',
+    image: 'https://images.unsplash.com/photo-1622445268465-842886f7229b?w=800&q=80',
+    description: '3-in-1 magnetic wireless fast charging station engineered with anodized aluminum and ambient base illumination.',
+    isFeatured: false,
+    colors: ['#334155', '#F1F5F9']
+  },
+  {
+    id: 4,
+    name: 'Horizon Lumina Smart Lamp',
+    category: 'lifestyle',
+    price: 129.50,
+    originalPrice: 159.50,
+    rating: 4.6,
+    reviewsCount: 67,
+    stock: 12,
+    badge: 'Popular',
+    image: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?w=800&q=80',
+    description: 'Circadian lighting assistant with voice ecosystem integration, customizable color temperatures, and ambient rhythm modes.',
+    isFeatured: true,
+    colors: ['#FFFFFF', '#1E1B4B']
+  },
+  {
+    id: 5,
+    name: 'Sonic Mini Ergonomic Bluetooth Earbuds',
+    category: 'audio',
+    price: 119.00,
+    originalPrice: 149.00,
+    rating: 4.9,
+    reviewsCount: 340,
+    stock: 64,
+    badge: 'Top Rated',
+    image: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=800&q=80',
+    description: 'Ergonomic studio sound design, IPX7 sweat resistance, multipoint connectivity, and touch tap gestures.',
+    isFeatured: false,
+    colors: ['#09090B', '#E4E4E7']
+  },
+  {
+    id: 6,
+    name: 'KeyCraft Mechanical Compact Keyboard',
+    category: 'accessories',
+    price: 159.99,
+    originalPrice: 189.99,
+    rating: 4.8,
+    reviewsCount: 156,
+    stock: 29,
+    badge: 'Hot Item',
+    image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=800&q=80',
+    description: 'Custom hot-swappable tactile switches, RGB lighting presets, CNC aluminum frame, and ultra-low latency wireless.',
+    isFeatured: true,
+    colors: ['#18181B', '#38BDF8']
+  }
+];
+
+const INITIAL_ORDERS = [
+  { id: 'ORD-9482', customer: 'Sophia Chen', email: 'sophia@example.com', total: 389.00, status: 'Delivered', date: '2026-03-20', items: 1 },
+  { id: 'ORD-9481', customer: 'Marcus Vance', email: 'm.vance@example.com', total: 319.98, status: 'Shipped', date: '2026-03-20', items: 2 },
+  { id: 'ORD-9480', customer: 'Elena Rostova', email: 'elena.r@example.com', total: 129.50, status: 'Processing', date: '2026-03-19', items: 1 },
+  { id: 'ORD-9479', customer: 'David K. Miller', email: 'dkmiller@example.com', total: 698.99, status: 'Pending', date: '2026-03-19', items: 3 },
+  { id: 'ORD-9478', customer: 'Aaliyah Patel', email: 'a.patel@example.com', total: 249.99, status: 'Delivered', date: '2026-03-18', items: 1 }
+];
+
+const Toast = ({ message, show, onClose }) => {
+  if (!show) return null;
+  return (
+    <div className="fixed bottom-6 right-6 z-50 flex items-center gap-3 bg-gray-900 text-white px-5 py-3 rounded-2xl shadow-2xl border border-gray-800 animate-bounce">
+      <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+      <span className="text-sm font-medium">{message}</span>
+      <button onClick={onClose} className="ml-2 text-gray-400 hover:text-white">
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  );
+};
+
+export default function App() {
+  // Navigation & View State
+  const [currentView, setCurrentView] = useState('store'); // 'store' | 'admin'
+  const [adminTab, setAdminTab] = useState('analytics'); // 'analytics' | 'products' | 'orders'
+  
+  // App Data State
+  const [products, setProducts] = useState(INITIAL_PRODUCTS);
+  const [orders, setOrders] = useState(INITIAL_ORDERS);
+  const [cart, setCart] = useState([]);
+  const [wishlist, setWishlist] = useState([]);
+  
+  // Store UI State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [quickViewProduct, setQuickViewProduct] = useState(null);
+  const [priceFilter, setPriceFilter] = useState(500);
+  const [sortBy, setSortBy] = useState('featured');
+  const [toastMessage, setToastMessage] = useState('');
+  const [showToast, setShowToast] = useState(false);
+
+  // Admin UI State
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [isAddProductOpen, setIsAddProductOpen] = useState(null);
+
+  // Helper trigger toast
+  const triggerToast = (msg) => {
+    setToastMessage(msg);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
+  const addToCart = (product, quantity = 1) => {
+    setCart(prev => {
+      const existing = prev.find(item => item.id === product.id);
+      if (existing) {
+        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item);
+      }
+      return [...prev, { ...product, quantity }];
+    });
+    triggerToast(`Added "${product.name}" to cart!`);
+  };
+
+  const updateCartQuantity = (id, delta) => {
+    setCart(prev => prev.map(item => {
+      if (item.id === id) {
+        const newQty = item.quantity + delta;
+        return newQty > 0 ? { ...item, quantity: newQty } : item;
+      }
+      return item;
+    }));
+  };
+
+  const removeFromCart = (id) => {
+    setCart(prev => prev.filter(item => item.id !== id));
+    triggerToast("Item removed from cart");
+  };
+
+  const toggleWishlist = (product) => {
+    setWishlist(prev => {
+      const exists = prev.some(item => item.id === product.id);
+      if (exists) {
+        triggerToast("Removed from Wishlist");
+        return prev.filter(item => item.id !== product.id);
+      } else {
+        triggerToast("Added to Wishlist");
+        return [...prev, product];
+      }
+    });
+  };
+
+  // Filtered & Sorted Products
+  const filteredProducts = useMemo(() => {
+    return products.filter(p => {
+      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            p.description.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = selectedCategory === 'all' || p.category === selectedCategory;
+      const matchesPrice = p.price <= priceFilter;
+      return matchesSearch && matchesCategory && matchesPrice;
+    }).sort((a, b) => {
+      if (sortBy === 'price-low') return a.price - b.price;
+      if (sortBy === 'price-high') return b.price - a.price;
+      if (sortBy === 'rating') return b.rating - a.rating;
+      return b.isFeatured ? 1 : -1;
+    });
+  }, [products, searchQuery, selectedCategory, priceFilter, sortBy]);
+
+  // Cart totals calculation
+  const cartSubtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased selection:bg-blue-500 selection:text-white">
+      
+      {/* Global Navigation Bar with Admin Toggle Switch */}
+      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-200/80 transition-all">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between gap-4">
+          
+          {/* Logo & Brand */}
+          <div className="flex items-center gap-6">
+            <button 
+              onClick={() => setCurrentView('store')}
+              className="flex items-center gap-2 text-xl font-bold tracking-tight text-slate-900 hover:opacity-90 transition"
+            >
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+                <Zap className="w-5 h-5 fill-current" />
+              </div>
+              <span>NEXUS<span className="text-blue-600">STORE</span></span>
+            </button>
+
+            {/* Quick View Switcher Pill */}
+            <div className="hidden md:flex items-center p-1 bg-slate-100 rounded-full border border-slate-200">
+              <button
+                onClick={() => setCurrentView('store')}
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all ${
+                  currentView === 'store' 
+                    ? 'bg-white text-slate-900 shadow-sm' 
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                Storefront
+              </button>
+              <button
+                onClick={() => setCurrentView('admin')}
+                className={`px-4 py-1.5 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 ${
+                  currentView === 'admin' 
+                    ? 'bg-indigo-600 text-white shadow-sm' 
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <LayoutDashboard className="w-3.5 h-3.5" />
+                Admin Dashboard
+              </button>
+            </div>
+          </div>
+
+          {/* Store Live Search Bar (Store view only) */}
+          {currentView === 'store' && (
+            <div className="hidden sm:flex flex-1 max-w-md relative">
+              <div className="relative w-full">
+                <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search ultra-fast products, gear, tech..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-slate-100/80 border border-transparent focus:border-blue-500 focus:bg-white rounded-full text-sm outline-none transition"
+                />
+                {searchQuery && (
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Action Icons Right */}
+          <div className="flex items-center gap-3 sm:gap-4">
+            {currentView === 'store' ? (
+              <>
+                <button 
+                  onClick={() => triggerToast(`Wishlist has ${wishlist.length} item(s)`)}
+                  className="relative p-2.5 rounded-full text-slate-600 hover:bg-slate-100 transition"
+                  title="Wishlist"
+                >
+                  <Heart className="w-5 h-5" />
+                  {wishlist.length > 0 && (
+                    <span className="absolute top-1 right-1 w-4 h-4 bg-rose-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      {wishlist.length}
+                    </span>
+                  )}
+                </button>
+
+                <button 
+                  onClick={() => setIsCartOpen(true)}
+                  className="relative flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-full font-medium text-sm hover:bg-blue-600 transition shadow-sm active:scale-95"
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  <span className="hidden sm:inline">Cart</span>
+                  <span className="bg-white/20 text-white px-2 py-0.5 rounded-full text-xs font-semibold">
+                    {cartCount}
+                  </span>
+                </button>
+              </>
+            ) : (
+              <button 
+                onClick={() => setCurrentView('store')}
+                className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-full text-xs font-semibold hover:bg-slate-800 transition"
+              >
+                Exit Admin Panel
+              </button>
+            )}
+
+            {/* Mobile View Toggle Switch */}
+            <button
+              onClick={() => setCurrentView(currentView === 'store' ? 'admin' : 'store')}
+              className="md:hidden p-2 rounded-xl text-slate-700 bg-slate-100"
+            >
+              <LayoutDashboard className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main View Router */}
+      {currentView === 'store' ? (
+        <StoreFrontView 
+          products={filteredProducts}
+          categories={INITIAL_CATEGORIES}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          addToCart={addToCart}
+          toggleWishlist={toggleWishlist}
+          wishlist={wishlist}
+          setQuickViewProduct={setQuickViewProduct}
+          priceFilter={priceFilter}
+          setPriceFilter={setPriceFilter}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+        />
+      ) : (
+        <AdminDashboardView 
+          products={products}
+          setProducts={setProducts}
+          orders={orders}
+          setOrders={setOrders}
+          adminTab={adminTab}
+          setAdminTab={setAdminTab}
+          triggerToast={triggerToast}
+        />
+      )}
+
+      {/* Slide-Over Shopping Cart Drawer */}
+      <CartDrawer 
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        cart={cart}
+        updateCartQuantity={updateCartQuantity}
+        removeFromCart={removeFromCart}
+        cartSubtotal={cartSubtotal}
+        triggerToast={triggerToast}
+      />
+
+      {/* Quick View Product Modal */}
+      {quickViewProduct && (
+        <QuickViewModal 
+          product={quickViewProduct}
+          onClose={() => setQuickViewProduct(null)}
+          addToCart={addToCart}
+          toggleWishlist={toggleWishlist}
+          isWishlisted={wishlist.some(w => w.id === quickViewProduct.id)}
+        />
+      )}
+
+      {/* Global Toast Notification */}
+      <Toast message={toastMessage} show={showToast} onClose={() => setShowToast(false)} />
+    </div>
+  );
+}
+
+function StoreFrontView({ 
+  products, categories, selectedCategory, setSelectedCategory, 
+  addToCart, toggleWishlist, wishlist, setQuickViewProduct,
+  priceFilter, setPriceFilter, sortBy, setSortBy 
+}) {
+  return (
+    <main className="space-y-16 pb-20">
+      {/* Hero Banner Section */}
+      <section className="relative overflow-hidden bg-slate-900 text-white pt-16 pb-24 lg:pt-24 lg:pb-32">
+        <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#3b82f6_1px,transparent_1px)] [background-size:16px_16px]" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 grid lg:grid-cols-2 gap-12 items-center">
+          
+          <div className="space-y-6 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold uppercase tracking-wider">
+              <Zap className="w-3.5 h-3.5" /> Next-Gen Audio & Gear 2026
+            </div>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight">
+              Sound & Tech <br className="hidden sm:inline" />
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400">
+                Without Limits.
+              </span>
+            </h1>
+            <p className="text-slate-400 text-base sm:text-lg max-w-xl mx-auto lg:mx-0">
+              Experience zero-latency audio, precision smart devices, and minimalist tech accessories crafted for modern performance.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+              <a 
+                href="#catalog" 
+                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-semibold text-sm hover:opacity-95 transition shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2"
+              >
+                Shop Collection <ArrowRight className="w-4 h-4" />
+              </a>
+              <a 
+                href="#flash-sale"
+                className="w-full sm:w-auto px-8 py-4 bg-slate-800 border border-slate-700 text-slate-200 rounded-full font-semibold text-sm hover:bg-slate-700 transition text-center"
+              >
+                View Limited Flash Deals
+              </a>
+            </div>
+
+            {/* Micro Stats */}
+            <div className="grid grid-cols-3 gap-4 pt-6 border-t border-slate-800 text-left">
+              <div>
+                <p className="text-2xl font-bold text-white">99.8%</p>
+                <p className="text-xs text-slate-400">Positive Ratings</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-white">24h</p>
+                <p className="text-xs text-slate-400">Express Delivery</p>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-white">2-Yr</p>
+                <p className="text-xs text-slate-400">Full Warranty</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Hero Image Showcase */}
+          <div className="relative flex justify-center">
+            <div className="relative w-full max-w-lg aspect-square rounded-3xl overflow-hidden shadow-2xl border border-slate-800 group">
+              <img 
+                src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&q=80" 
+                alt="Aura Sound Pro"
+                className="w-full h-full object-cover group-hover:scale-105 transition duration-700"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent opacity-80" />
+              <div className="absolute bottom-6 left-6 right-6 p-4 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-blue-300 font-semibold uppercase">Featured Release</p>
+                  <p className="text-white font-medium text-sm">Aura Sound Pro Wireless</p>
+                </div>
+                <span className="text-white font-bold text-base">$249.99</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* Trust Highlights Bar */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 p-8 bg-white rounded-3xl border border-slate-200/80 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><Truck className="w-6 h-6" /></div>
+            <div>
+              <h4 className="font-semibold text-sm text-slate-900">Free Express Shipping</h4>
+              <p className="text-xs text-slate-500">On all orders above $75</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl"><ShieldCheck className="w-6 h-6" /></div>
+            <div>
+              <h4 className="font-semibold text-sm text-slate-900">2-Year Warranty</h4>
+              <p className="text-xs text-slate-500">Guaranteed protection</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl"><RefreshCw className="w-6 h-6" /></div>
+            <div>
+              <h4 className="font-semibold text-sm text-slate-900">30 Days Returns</h4>
+              <p className="text-xs text-slate-500">Hassle-free money back</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl"><Zap className="w-6 h-6" /></div>
+            <div>
+              <h4 className="font-semibold text-sm text-slate-900">24/7 Tech Support</h4>
+              <p className="text-xs text-slate-500">Dedicated expert help</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Main Catalog Section */}
+      <section id="catalog" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        
+        {/* Section Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+          <div>
+            <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Explore Our Gear</h2>
+            <p className="text-slate-500 text-sm mt-1">Discover high-performance devices crafted for modern lifestyles.</p>
+          </div>
+
+          {/* Category Quick Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+            {categories.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
+                  selectedCategory === cat.id
+                    ? 'bg-slate-900 text-white shadow-md'
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200'
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Catalog Control Toolbar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-white rounded-2xl border border-slate-200 text-xs">
+          <div className="flex items-center gap-4 w-full sm:w-auto">
+            <div className="flex items-center gap-2 text-slate-500 font-medium">
+              <SlidersHorizontal className="w-4 h-4" /> Max Price: <span className="font-bold text-slate-900">${priceFilter}</span>
+            </div>
+            <input 
+              type="range" 
+              min="50" 
+              max="500" 
+              value={priceFilter} 
+              onChange={(e) => setPriceFilter(Number(e.target.value))}
+              className="w-32 accent-blue-600"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <span className="text-slate-500 font-medium">Sort By:</span>
+            <select 
+              value={sortBy} 
+              onChange={(e) => setSortBy(e.target.value)}
+              className="bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5 font-medium outline-none text-slate-700"
+            >
+              <option value="featured">Featured First</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="rating">Highest Rated</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Product Grid */}
+        {products.length === 0 ? (
+          <div className="py-20 text-center bg-white rounded-3xl border border-slate-200">
+            <AlertCircle className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+            <h3 className="text-lg font-bold text-slate-800">No products match your criteria</h3>
+            <p className="text-slate-500 text-xs mt-1">Try resetting filters or searching for another term.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {products.map(product => (
+              <ProductCard 
+                key={product.id}
+                product={product}
+                addToCart={addToCart}
+                toggleWishlist={toggleWishlist}
+                isWishlisted={wishlist.some(w => w.id === product.id)}
+                setQuickViewProduct={setQuickViewProduct}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Flash Sale Banner Section */}
+      <section id="flash-sale" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative bg-gradient-to-br from-indigo-900 via-slate-900 to-blue-950 rounded-3xl p-8 lg:p-12 text-white overflow-hidden shadow-xl border border-indigo-900">
+          <div className="relative z-10 grid lg:grid-cols-2 gap-8 items-center">
+            <div className="space-y-4">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full text-xs font-bold uppercase tracking-wider">
+                <Clock className="w-3.5 h-3.5" /> Limited Time Deal
+              </span>
+              <h3 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+                Pulse X Pro Titanium Smartwatch
+              </h3>
+              <p className="text-slate-300 text-sm max-w-md">
+                Get $60 instant discount with free express courier delivery. Offer available while current stock lasts.
+              </p>
+              
+              {/* Countdown Timer Visual */}
+              <div className="flex items-center gap-3 pt-2">
+                <div className="bg-slate-800/80 backdrop-blur border border-slate-700 px-4 py-2.5 rounded-2xl text-center min-w-[70px]">
+                  <span className="text-xl font-bold text-white block">04</span>
+                  <span className="text-[10px] uppercase text-slate-400 font-medium">Hours</span>
+                </div>
+                <span className="text-xl font-bold text-slate-500">:</span>
+                <div className="bg-slate-800/80 backdrop-blur border border-slate-700 px-4 py-2.5 rounded-2xl text-center min-w-[70px]">
+                  <span className="text-xl font-bold text-white block">38</span>
+                  <span className="text-[10px] uppercase text-slate-400 font-medium">Mins</span>
+                </div>
+                <span className="text-xl font-bold text-slate-500">:</span>
+                <div className="bg-slate-800/80 backdrop-blur border border-slate-700 px-4 py-2.5 rounded-2xl text-center min-w-[70px]">
+                  <span className="text-xl font-bold text-white block">15</span>
+                  <span className="text-[10px] uppercase text-slate-400 font-medium">Secs</span>
+                </div>
+              </div>
+
+              <div className="pt-4">
+                <button 
+                  onClick={() => addToCart(products[1] || products[0])}
+                  className="px-8 py-3.5 bg-white text-slate-900 hover:bg-slate-100 rounded-full font-bold text-sm transition shadow-lg flex items-center gap-2"
+                >
+                  Claim Deal Now — $389.00
+                </button>
+              </div>
+            </div>
+
+            <div className="flex justify-center">
+              <img 
+                src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=800&q=80" 
+                alt="Flash Sale Watch"
+                className="w-full max-w-sm rounded-2xl shadow-2xl border border-white/10 transform hover:scale-105 transition duration-500"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Customer Social Proof / Reviews */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div className="text-center max-w-2xl mx-auto space-y-2">
+          <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">Loved by Tech Enthusiasts</h2>
+          <p className="text-slate-500 text-sm">Read real customer experiences from verified audio engineers and professionals.</p>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {[
+            { name: "Alex Rivera", role: "Audio Engineer", comment: "The soundstage on the Aura Pro is unmatched for this price. Lightning-fast shipping too!", rating: 5 },
+            { name: "Sarah Jenkins", role: "Product Designer", comment: "Minimalist aesthetic and supreme build quality. The titanium smartwatch feels incredible.", rating: 5 },
+            { name: "David Chen", role: "Software Architect", comment: "Order arrived in less than 24 hours. The customer support team was incredibly helpful.", rating: 5 }
+          ].map((rev, idx) => (
+            <div key={idx} className="bg-white p-6 rounded-3xl border border-slate-200/80 shadow-sm space-y-4">
+              <div className="flex items-center gap-1 text-amber-400">
+                {[...Array(rev.rating)].map((_, i) => (
+                  <Star key={i} className="w-4 h-4 fill-current" />
+                ))}
+              </div>
+              <p className="text-slate-600 text-sm leading-relaxed">"{rev.comment}"</p>
+              <div className="pt-2 border-t border-slate-100">
+                <p className="font-bold text-slate-900 text-sm">{rev.name}</p>
+                <p className="text-xs text-slate-400">{rev.role}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-slate-900 text-slate-400 pt-16 pb-12 border-t border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-10 pb-12 border-b border-slate-800">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 text-white font-bold text-xl">
+              <Zap className="w-5 h-5 text-blue-500 fill-current" /> NEXUSSTORE
+            </div>
+            <p className="text-xs leading-relaxed">
+              Pioneering high-converting, ultra-fast e-commerce shopping experiences with next-generation web technologies.
+            </p>
+          </div>
+          <div>
+            <h5 className="text-white font-semibold text-sm mb-3">Shop Categories</h5>
+            <ul className="space-y-2 text-xs">
+              <li><a href="#" className="hover:text-white transition">Audio & Lossless Sound</a></li>
+              <li><a href="#" className="hover:text-white transition">Titanium Wearables</a></li>
+              <li><a href="#" className="hover:text-white transition">Tech Accessories</a></li>
+              <li><a href="#" className="hover:text-white transition">Smart Home Ecosystem</a></li>
+            </ul>
+          </div>
+          <div>
+            <h5 className="text-white font-semibold text-sm mb-3">Customer Service</h5>
+            <ul className="space-y-2 text-xs">
+              <li><a href="#" className="hover:text-white transition">Track Order Status</a></li>
+              <li><a href="#" className="hover:text-white transition">Shipping & Returns Policy</a></li>
+              <li><a href="#" className="hover:text-white transition">Warranty Registration</a></li>
+              <li><a href="#" className="hover:text-white transition">24/7 Help Desk</a></li>
+            </ul>
+          </div>
+          <div>
+            <h5 className="text-white font-semibold text-sm mb-3">Stay Updated</h5>
+            <p className="text-xs mb-3">Get exclusive discounts and early access to drops.</p>
+            <div className="flex gap-2">
+              <input 
+                type="email" 
+                placeholder="Enter email" 
+                className="bg-slate-800 border border-slate-700 text-white px-3 py-2 rounded-xl text-xs outline-none focus:border-blue-500 w-full"
+              />
+              <button className="bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-semibold hover:bg-blue-500 transition">
+                Join
+              </button>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 flex flex-col sm:flex-row items-center justify-between text-xs gap-4">
+          <p>© 2026 NEXUSSTORE Inc. All rights reserved.</p>
+          <div className="flex items-center gap-6">
+            <a href="#" className="hover:text-white">Privacy Policy</a>
+            <a href="#" className="hover:text-white">Terms of Service</a>
+            <a href="#" className="hover:text-white">Security</a>
+          </div>
+        </div>
+      </footer>
+    </main>
+  );
+}
+
+function ProductCard({ product, addToCart, toggleWishlist, isWishlisted, setQuickViewProduct }) {
+  return (
+    <div className="group bg-white rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between">
+      <div>
+        {/* Product Image Container */}
+        <div className="relative aspect-square overflow-hidden bg-slate-100">
+          <img 
+            src={product.image} 
+            alt={product.name} 
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+          
+          {/* Badge */}
+          {product.badge && (
+            <span className="absolute top-4 left-4 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow">
+              {product.badge}
+            </span>
+          )}
+
+          {/* Action Overlay Buttons */}
+          <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-90 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+            <button 
+              onClick={() => toggleWishlist(product)}
+              className={`p-2.5 rounded-full shadow-md backdrop-blur transition ${
+                isWishlisted ? 'bg-rose-500 text-white' : 'bg-white/90 text-slate-700 hover:bg-white'
+              }`}
+            >
+              <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} />
+            </button>
+            <button 
+              onClick={() => setQuickViewProduct(product)}
+              className="p-2.5 bg-white/90 text-slate-700 rounded-full shadow-md backdrop-blur hover:bg-white transition"
+              title="Quick View"
+            >
+              <Eye className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Product Information */}
+        <div className="p-5 space-y-2">
+          <div className="flex items-center justify-between text-xs text-slate-500">
+            <span className="uppercase font-semibold tracking-wider">{product.category}</span>
+            <div className="flex items-center gap-1 text-amber-500 font-semibold">
+              <Star className="w-3.5 h-3.5 fill-current" />
+              <span>{product.rating}</span>
+              <span className="text-slate-400">({product.reviewsCount})</span>
+            </div>
+          </div>
+
+          <h3 className="font-bold text-slate-900 text-base group-hover:text-blue-600 transition line-clamp-1">
+            {product.name}
+          </h3>
+
+          <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed">
+            {product.description}
+          </p>
+
+          {/* Swatches */}
+          {product.colors && (
+            <div className="flex items-center gap-1.5 pt-1">
+              {product.colors.map((c, i) => (
+                <span key={i} className="w-3 h-3 rounded-full border border-slate-300" style={{ backgroundColor: c }} />
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Pricing & Add to Cart Footer */}
+      <div className="p-5 pt-0 flex items-center justify-between gap-2 border-t border-slate-50 mt-2">
+        <div>
+          <div className="flex items-baseline gap-1.5">
+            <span className="text-lg font-extrabold text-slate-900">${product.price.toFixed(2)}</span>
+            {product.originalPrice && (
+              <span className="text-xs text-slate-400 line-through">${product.originalPrice.toFixed(2)}</span>
+            )}
+          </div>
+          <span className={`text-[10px] font-semibold ${product.stock < 20 ? 'text-amber-600' : 'text-emerald-600'}`}>
+            {product.stock < 20 ? `Only ${product.stock} left` : 'In Stock'}
+          </span>
+        </div>
+
+        <button 
+          onClick={() => addToCart(product)}
+          className="flex items-center gap-1.5 px-4 py-2.5 bg-slate-900 text-white hover:bg-blue-600 rounded-full font-semibold text-xs transition shadow hover:shadow-blue-500/20 active:scale-95"
+        >
+          <Plus className="w-4 h-4" /> Add
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function QuickViewModal({ product, onClose, addToCart, toggleWishlist, isWishlisted }) {
+  const [qty, setQty] = useState(1);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white rounded-3xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-200 relative animate-scale-up">
+        <button 
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <div className="grid md:grid-cols-2">
+          <div className="bg-slate-100 aspect-square md:aspect-auto">
+            <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+          </div>
+
+          <div className="p-6 md:p-8 flex flex-col justify-between space-y-6">
+            <div className="space-y-3">
+              <span className="text-xs font-bold uppercase tracking-wider text-blue-600">{product.category}</span>
+              <h2 className="text-2xl font-extrabold text-slate-900">{product.name}</h2>
+              <div className="flex items-center gap-2">
+                <div className="flex text-amber-400">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-current" />
+                  ))}
+                </div>
+                <span className="text-xs font-semibold text-slate-600">{product.rating} ({product.reviewsCount} reviews)</span>
+              </div>
+              <p className="text-xs text-slate-500 leading-relaxed">{product.description}</p>
+              
+              <div className="pt-2">
+                <span className="text-2xl font-black text-slate-900">${product.price.toFixed(2)}</span>
+                {product.originalPrice && (
+                  <span className="ml-2 text-sm text-slate-400 line-through">${product.originalPrice.toFixed(2)}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Quantity and Actions */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-semibold text-slate-700">Quantity:</span>
+                <div className="flex items-center border border-slate-200 rounded-full bg-slate-50">
+                  <button 
+                    onClick={() => setQty(Math.max(1, qty - 1))}
+                    className="px-3 py-1 text-slate-600 hover:text-slate-900 font-bold"
+                  >
+                    -
+                  </button>
+                  <span className="px-3 py-1 text-xs font-bold text-slate-900">{qty}</span>
+                  <button 
+                    onClick={() => setQty(qty + 1)}
+                    className="px-3 py-1 text-slate-600 hover:text-slate-900 font-bold"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => {
+                    addToCart(product, qty);
+                    onClose();
+                  }}
+                  className="flex-1 py-3 bg-blue-600 text-white rounded-full font-bold text-xs hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                >
+                  <ShoppingBag className="w-4 h-4" /> Add To Cart
+                </button>
+                <button 
+                  onClick={() => toggleWishlist(product)}
+                  className={`p-3 border rounded-full transition ${isWishlisted ? 'bg-rose-50 border-rose-200 text-rose-500' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                >
+                  <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CartDrawer({ isOpen, onClose, cart, updateCartQuantity, removeFromCart, cartSubtotal, triggerToast }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white w-full max-w-md h-full shadow-2xl flex flex-col justify-between border-l border-slate-200 animate-slide-left">
+        
+        {/* Drawer Header */}
+        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ShoppingBag className="w-5 h-5 text-blue-600" />
+            <h3 className="font-extrabold text-slate-900 text-lg">Your Cart</h3>
+          </div>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Cart Item List */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-4 divide-y divide-slate-100">
+          {cart.length === 0 ? (
+            <div className="py-20 text-center space-y-3">
+              <ShoppingBag className="w-12 h-12 text-slate-300 mx-auto" />
+              <p className="text-slate-500 font-medium text-sm">Your shopping bag is empty.</p>
+              <button 
+                onClick={onClose}
+                className="px-6 py-2 bg-slate-900 text-white rounded-full text-xs font-semibold hover:bg-blue-600 transition"
+              >
+                Start Shopping
+              </button>
+            </div>
+          ) : (
+            cart.map(item => (
+              <div key={item.id} className="pt-4 first:pt-0 flex gap-4 items-center">
+                <img src={item.image} alt={item.name} className="w-16 h-16 rounded-2xl object-cover bg-slate-100 border border-slate-200" />
+                
+                <div className="flex-1 space-y-1">
+                  <h4 className="font-bold text-slate-900 text-xs line-clamp-1">{item.name}</h4>
+                  <p className="text-xs font-semibold text-slate-700">${item.price.toFixed(2)}</p>
+                  
+                  {/* Quantity adjustment */}
+                  <div className="flex items-center gap-2 pt-1">
+                    <button 
+                      onClick={() => updateCartQuantity(item.id, -1)}
+                      className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 text-xs font-bold flex items-center justify-center hover:bg-slate-200"
+                    >
+                      -
+                    </button>
+                    <span className="text-xs font-bold text-slate-800">{item.quantity}</span>
+                    <button 
+                      onClick={() => updateCartQuantity(item.id, 1)}
+                      className="w-5 h-5 rounded-full bg-slate-100 text-slate-600 text-xs font-bold flex items-center justify-center hover:bg-slate-200"
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => removeFromCart(item.id)}
+                  className="p-2 text-slate-400 hover:text-rose-500 transition"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Footer Checkout Summary */}
+        {cart.length > 0 && (
+          <div className="p-6 border-t border-slate-100 bg-slate-50 space-y-4">
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between text-slate-500">
+                <span>Subtotal</span>
+                <span className="font-semibold text-slate-900">${cartSubtotal.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-slate-500">
+                <span>Shipping</span>
+                <span className="text-emerald-600 font-semibold">FREE</span>
+              </div>
+              <div className="flex justify-between text-sm font-extrabold text-slate-900 pt-2 border-t border-slate-200">
+                <span>Total</span>
+                <span className="text-blue-600">${cartSubtotal.toFixed(2)}</span>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => {
+                triggerToast("Order placed successfully! Demo checkout completed.");
+                onClose();
+              }}
+              className="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-bold text-xs hover:opacity-95 transition shadow-md shadow-blue-500/20"
+            >
+              Checkout Now (${cartSubtotal.toFixed(2)})
+            </button>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
+function AdminDashboardView({ products, setProducts, orders, setOrders, adminTab, setAdminTab, triggerToast }) {
+  const [newProd, setNewProd] = useState({ name: '', price: '', category: 'audio', stock: 20, image: '', description: '' });
+
+  // Add Product Handler
+  const handleAddProduct = (e) => {
+    e.preventDefault();
+    if (!newProd.name || !newProd.price || !newProd.image) {
+      triggerToast("Please fill in all product details");
+      return;
+    }
+    const created = {
+      id: Date.now(),
+      name: newProd.name,
+      category: newProd.category,
+      price: parseFloat(newProd.price),
+      originalPrice: parseFloat(newProd.price) * 1.2,
+      rating: 5.0,
+      reviewsCount: 1,
+      stock: parseInt(newProd.stock),
+      badge: 'New',
+      image: newProd.image,
+      description: newProd.description || 'Newly added high-tech inventory item.',
+      isFeatured: false
+    };
+    setProducts([created, ...products]);
+    setNewProd({ name: '', price: '', category: 'audio', stock: 20, image: '', description: '' });
+    triggerToast("New product added to catalog!");
+  };
+
+  const handleDeleteProduct = (id) => {
+    setProducts(products.filter(p => p.id !== id));
+    triggerToast("Product removed from store");
+  };
+
+  const handleUpdateOrderStatus = (orderId, newStatus) => {
+    setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+    triggerToast(`Order ${orderId} updated to ${newStatus}`);
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      
+      {/* Admin Header Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-slate-900 text-white rounded-3xl">
+        <div>
+          <span className="text-xs font-bold uppercase tracking-wider text-indigo-400">Control Panel</span>
+          <h1 className="text-2xl font-extrabold tracking-tight">Store Administrator Dashboard</h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="w-3 h-3 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-xs font-semibold text-slate-300">Live Backend Connected</span>
+        </div>
+      </div>
+
+      {/* Admin Sub-Navigation Tabs */}
+      <div className="flex items-center gap-2 border-b border-slate-200 overflow-x-auto pb-1">
+        {[
+          { id: 'analytics', label: 'Overview Analytics', icon: BarChart3 },
+          { id: 'products', label: 'Manage Products', icon: Package },
+          { id: 'orders', label: 'Customer Orders', icon: ShoppingCart }
+        ].map(tab => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setAdminTab(tab.id)}
+              className={`flex items-center gap-2 px-5 py-3 font-semibold text-xs rounded-t-2xl border-b-2 transition ${
+                adminTab === tab.id
+                  ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50'
+                  : 'border-transparent text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Analytics Tab Content */}
+      {adminTab === 'analytics' && (
+        <div className="space-y-8 animate-fade-in">
+          {/* Key Metric Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="p-6 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-400 uppercase">Total Revenue</span>
+                <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-2xl"><DollarSign className="w-5 h-5" /></div>
+              </div>
+              <p className="text-2xl font-black text-slate-900">$48,290.00</p>
+              <div className="flex items-center gap-1 text-xs text-emerald-600 font-semibold">
+                <ArrowUpRight className="w-3.5 h-3.5" /> +14.2% from last month
+              </div>
+            </div>
+
+            <div className="p-6 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-400 uppercase">Total Orders</span>
+                <div className="p-2.5 bg-blue-50 text-blue-600 rounded-2xl"><ShoppingCart className="w-5 h-5" /></div>
+              </div>
+              <p className="text-2xl font-black text-slate-900">1,248</p>
+              <div className="flex items-center gap-1 text-xs text-emerald-600 font-semibold">
+                <ArrowUpRight className="w-3.5 h-3.5" /> +8.1% vs target
+              </div>
+            </div>
+
+            <div className="p-6 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-400 uppercase">Conversion Rate</span>
+                <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl"><Activity className="w-5 h-5" /></div>
+              </div>
+              <p className="text-2xl font-black text-slate-900">3.84%</p>
+              <div className="flex items-center gap-1 text-xs text-emerald-600 font-semibold">
+                <ArrowUpRight className="w-3.5 h-3.5" /> +0.6% optimization
+              </div>
+            </div>
+
+            <div className="p-6 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-400 uppercase">Active Catalog</span>
+                <div className="p-2.5 bg-amber-50 text-amber-600 rounded-2xl"><Package className="w-5 h-5" /></div>
+              </div>
+              <p className="text-2xl font-black text-slate-900">{products.length} Products</p>
+              <p className="text-xs text-slate-400 font-medium">Across 4 primary categories</p>
+            </div>
+          </div>
+
+          {/* SVG Visual Sales Chart Simulation */}
+          <div className="p-6 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-base">Weekly Revenue Velocity</h3>
+                <p className="text-xs text-slate-500">Real-time daily transaction totals for current week</p>
+              </div>
+              <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-semibold">
+                March 2026
+              </span>
+            </div>
+
+            {/* Simulated Bar Chart */}
+            <div className="h-48 flex items-end justify-between gap-3 pt-8 pb-2 px-4 border-b border-slate-100">
+              {[
+                { day: 'Mon', val: 40, label: '$4.2k' },
+                { day: 'Tue', val: 65, label: '$6.8k' },
+                { day: 'Wed', val: 55, label: '$5.5k' },
+                { day: 'Thu', val: 85, label: '$9.1k' },
+                { day: 'Fri', val: 95, label: '$11.4k' },
+                { day: 'Sat', val: 70, label: '$7.8k' },
+                { day: 'Sun', val: 50, label: '$5.1k' }
+              ].map((bar, idx) => (
+                <div key={idx} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                  <span className="text-[10px] font-bold text-slate-400 opacity-0 group-hover:opacity-100 transition">
+                    {bar.label}
+                  </span>
+                  <div 
+                    className="w-full bg-gradient-to-t from-indigo-600 to-blue-500 rounded-t-xl transition-all duration-500 group-hover:opacity-90"
+                    style={{ height: `${bar.val}%` }}
+                  />
+                  <span className="text-xs font-semibold text-slate-500">{bar.day}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manage Products Tab Content */}
+      {adminTab === 'products' && (
+        <div className="space-y-8 animate-fade-in">
+          
+          {/* Add Product Form Box */}
+          <div className="p-6 bg-white rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <h3 className="font-extrabold text-slate-900 text-base flex items-center gap-2">
+              <Plus className="w-5 h-5 text-indigo-600" /> Add New Inventory Item
+            </h3>
+
+            <form onSubmit={handleAddProduct} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Product Title</label>
+                <input 
+                  type="text"
+                  placeholder="e.g. Vision Pro Spatial Headset"
+                  value={newProd.name}
+                  onChange={(e) => setNewProd({ ...newProd, name: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-indigo-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Price ($)</label>
+                <input 
+                  type="number"
+                  placeholder="299.99"
+                  value={newProd.price}
+                  onChange={(e) => setNewProd({ ...newProd, price: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-indigo-600"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Category</label>
+                <select 
+                  value={newProd.category}
+                  onChange={(e) => setNewProd({ ...newProd, category: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-indigo-600 font-medium"
+                >
+                  <option value="audio">Audio & Sound</option>
+                  <option value="wearables">Wearables</option>
+                  <option value="accessories">Tech Accessories</option>
+                  <option value="lifestyle">Smart Home</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Stock Quantity</label>
+                <input 
+                  type="number"
+                  placeholder="50"
+                  value={newProd.stock}
+                  onChange={(e) => setNewProd({ ...newProd, stock: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-indigo-600"
+                />
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-semibold text-slate-600 mb-1">Image URL</label>
+                <input 
+                  type="text"
+                  placeholder="https://images.unsplash.com/..."
+                  value={newProd.image}
+                  onChange={(e) => setNewProd({ ...newProd, image: e.target.value })}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none focus:border-indigo-600"
+                />
+              </div>
+
+              <div className="sm:col-span-3 flex justify-end">
+                <button 
+                  type="submit"
+                  className="px-6 py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition flex items-center gap-2 shadow"
+                >
+                  <Plus className="w-4 h-4" /> Save Product to Store
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Product Inventory Table */}
+          <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <h3 className="font-extrabold text-slate-900 text-base">Current Store Inventory ({products.length})</h3>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-500 border-b border-slate-100 uppercase font-semibold">
+                    <th className="p-4">Product</th>
+                    <th className="p-4">Category</th>
+                    <th className="p-4">Price</th>
+                    <th className="p-4">Stock</th>
+                    <th className="p-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {products.map(p => (
+                    <tr key={p.id} className="hover:bg-slate-50/80 transition">
+                      <td className="p-4 flex items-center gap-3">
+                        <img src={p.image} alt={p.name} className="w-10 h-10 rounded-xl object-cover border" />
+                        <div>
+                          <p className="font-bold text-slate-900">{p.name}</p>
+                          <p className="text-[10px] text-slate-400">ID: #{p.id}</p>
+                        </div>
+                      </td>
+                      <td className="p-4 capitalize font-semibold text-slate-600">{p.category}</td>
+                      <td className="p-4 font-bold text-slate-900">${p.price.toFixed(2)}</td>
+                      <td className="p-4">
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                          p.stock < 20 ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+                        }`}>
+                          {p.stock} in stock
+                        </span>
+                      </td>
+                      <td className="p-4 text-right space-x-2">
+                        <button 
+                          onClick={() => handleDeleteProduct(p.id)}
+                          className="p-2 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition"
+                          title="Delete Product"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      )}
+
+      {/* Manage Orders Tab Content */}
+      {adminTab === 'orders' && (
+        <div className="space-y-8 animate-fade-in">
+          <div className="bg-white rounded-3xl border border-slate-200 overflow-hidden shadow-sm">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <h3 className="font-extrabold text-slate-900 text-base">Recent Orders</h3>
+              <span className="text-xs text-slate-500 font-semibold">{orders.length} total active</span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-500 border-b border-slate-100 uppercase font-semibold">
+                    <th className="p-4">Order ID</th>
+                    <th className="p-4">Customer</th>
+                    <th className="p-4">Date</th>
+                    <th className="p-4">Total</th>
+                    <th className="p-4">Status</th>
+                    <th className="p-4 text-right">Update Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {orders.map(o => (
+                    <tr key={o.id} className="hover:bg-slate-50/80 transition">
+                      <td className="p-4 font-bold text-slate-900">{o.id}</td>
+                      <td className="p-4">
+                        <p className="font-bold text-slate-800">{o.customer}</p>
+                        <p className="text-[10px] text-slate-400">{o.email}</p>
+                      </td>
+                      <td className="p-4 text-slate-500">{o.date}</td>
+                      <td className="p-4 font-extrabold text-slate-900">${o.total.toFixed(2)}</td>
+                      <td className="p-4">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold ${
+                          o.status === 'Delivered' ? 'bg-emerald-100 text-emerald-700' :
+                          o.status === 'Shipped' ? 'bg-blue-100 text-blue-700' :
+                          o.status === 'Processing' ? 'bg-amber-100 text-amber-700' :
+                          'bg-slate-100 text-slate-700'
+                        }`}>
+                          {o.status}
+                        </span>
+                      </td>
+                      <td className="p-4 text-right">
+                        <select 
+                          value={o.status}
+                          onChange={(e) => handleUpdateOrderStatus(o.id, e.target.value)}
+                          className="bg-slate-100 border border-slate-200 rounded-lg px-2.5 py-1 text-xs font-semibold outline-none text-slate-700"
+                        >
+                          <option value="Pending">Pending</option>
+                          <option value="Processing">Processing</option>
+                          <option value="Shipped">Shipped</option>
+                          <option value="Delivered">Delivered</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+}
